@@ -1,3 +1,4 @@
+export CUDA_VISIBLE_DEVICES=4
 model_path="Qwen/Qwen2-7B"
 test_data="/data/data_adapters/fin/sa/test.json"
 

@@ -1,5 +1,6 @@
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1
+export CUDA_VISIBLE_DEVICES=4
 
 python ../src/update_selector.py \
     --use_deepspeed false \

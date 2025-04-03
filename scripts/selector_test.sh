@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+export CUDA_VISIBLE_DEVICES=4
 model_path="/Qwen/Qwen2-7B"
 test_data="../data/test/test_exp2_265.json"
 data_config_path="../config/data_config_exp_2.json"

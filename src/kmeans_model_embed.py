@@ -30,7 +30,7 @@ def get_embeddings(texts, model_id, embedding_id):
     
     # 将文本编码为token IDs和attention masks
     # inputs = [tokenizer(text, return_tensors="pt", padding=True, truncation=True).to('cuda') for text in texts]
-    inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to('cuda:1')
+    inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to('cuda:0')
     inputs_ids = inputs['input_ids']
 
     output_averages = []

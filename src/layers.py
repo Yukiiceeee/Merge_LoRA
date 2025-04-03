@@ -12,7 +12,7 @@ def separate_embedding_layer(model: AutoModelForCausalLM, output_dir):
     
 def load_embedding_layer(filepath: str):
     state_dict = torch.load(filepath)
-    embedding = torch.nn.modules.sparse.Embedding(state_dict['weight'].shape[0], state_dict['weight'].shape[1]).to('cuda:1')
+    embedding = torch.nn.modules.sparse.Embedding(state_dict['weight'].shape[0], state_dict['weight'].shape[1]).to('cuda:0')
     embedding.load_state_dict(state_dict)
     return embedding
 
