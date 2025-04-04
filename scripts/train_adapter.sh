@@ -4,22 +4,26 @@ export CUDA_VISIBLE_DEVICES=4
 
 python ../src/train_adapter.py \
     --use_deepspeed false \
-    --model_name_or_path /d2/mxy/Models/Meta-Llama-3-8B \
+    --model_name_or_path /d2/mxy/Models/Qwen2-7B \
     --domain med \
-    --task ie \
-    --train_data_path /d2/mxy/TASA/data/data_adapters/med/ie/train.json \
-    --output_dir /d2/mxy/TASA/models/adapters/med/ie \
+    --task mc \
+    --train_data_path /d2/mxy/TASA/data/data_adapters/med/mc/train.json \
+    --output_dir /d2/mxy/TASA/models/adapters \
     --peft_type lora \
     --lora_r 8 \
     --lora_alpha 16 \
     --lora_dropout 0.05 \
-    --per_device_train_batch_size 1 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 128 \
+    --gradient_accumulation_steps 4 \
     --model_max_length 512 \
-    --save_strategy "epoch" \
-    --save_total_limit 5 \
-    --learning_rate 4e-4 \
-    --num_train_epochs 5 \
-    --logging_steps 10 \
+    --save_strategy "steps" \
+    --save_steps 100 \
+    --learning_rate 2e-4 \
+    --num_train_epochs 6 \
+    --warmup_steps 40 \ 
+    --logging_steps 1 \
     --do_train True \
+    --weight_decay 0.01 \
+    # --evaluation_strategy "steps" \
+    # --eval_steps 100 \

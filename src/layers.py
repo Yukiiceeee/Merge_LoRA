@@ -21,7 +21,7 @@ def run(filepath, outputpath):
     separate_embedding_layer(model, outputpath)
     
 if __name__ == "__main__":
-    model_id = "/d2/mxy/Models/Meta-Llama-3-8B"
-    output_dir = "/d2/mxy/TASA/models/Meta-Llama-3-8B"
+    model_id = "/d2/mxy/Models/Qwen2-7B"
+    output_dir = "/d2/mxy/TASA/models/Qwen2-7B"
 
     run(model_id, output_dir)

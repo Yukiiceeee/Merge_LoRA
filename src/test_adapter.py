@@ -5,22 +5,48 @@ import os
 import fire
 from peft import PeftModel
 from tqdm import tqdm
+from utils import load_data_to_list, smart_tokenizer_and_embedding_resize, save_data_to_json
 import re
+from constants import (
+    IGNORE_INDEX,
+    DEFAULT_PAD_TOKEN,
+    DEFAULT_EOS_TOKEN,
+    DEFAULT_BOS_TOKEN,
+    DEFAULT_UNK_TOKEN,
+    SELECT_PROMPT_START,
+    SELECT_PROMPT_END
+)
 
 def run(
-    model_path: str = "/data/yimin/models/base/Qwen/Qwen2-7B",
-    adapter_model_id: str = "/data/yimin/peft/TASA/models/adapters/legal/mc",
-    data_path: str = "/data/yimin/peft/TASA/data/data_adapters/legal/mc/test.json",
+    model_path: str = "/d2/mxy/Models/Qwen2-7B",
+    adapter_model_id: str = "/d2/mxy/TASA/models/adapters/med/mc",
+    data_path: str = "/d2/mxy/TASA/data/data_adapters/med/mc/test.json",
     metric: str = "acc",
-    domain: str = "fin",
-    task: str = "cmcq"
+    domain: str = "med",
+    task: str = "mc"
 ):
 
     prompt_input, prompt_no_input = PROMPT_DICT["prompt_input"], PROMPT_DICT["prompt_no_input"]
 
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto', torch_dtype='auto', trust_remote_code=True)
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-        
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
+    
+    special_tokens_dict = dict()
+    if tokenizer.pad_token is None:
+        special_tokens_dict["pad_token"] = DEFAULT_PAD_TOKEN
+    if tokenizer.eos_token is None:
+        special_tokens_dict["eos_token"] = DEFAULT_EOS_TOKEN
+    if tokenizer.bos_token is None:
+        special_tokens_dict["bos_token"] = DEFAULT_BOS_TOKEN
+    if tokenizer.unk_token is None:
+        special_tokens_dict["unk_token"] = DEFAULT_UNK_TOKEN
+
+    smart_tokenizer_and_embedding_resize(
+        special_tokens_dict=special_tokens_dict,
+        tokenizer=tokenizer,
+        model=model,
+    )
+
     model = PeftModel.from_pretrained(model, adapter_model_id)
 
     with open(data_path, "r") as f:
@@ -28,6 +54,7 @@ def run(
     for example in tqdm(data):
         input_prompt = prompt_input.format_map(example) if example.get("input", "") != "" else prompt_no_input.format_map(example)
         inputs = tokenizer(input_prompt, return_tensors="pt")
+        inputs = {k: v.to("cuda") for k, v in inputs.items()}
         output = model.generate(**inputs, max_new_tokens=256)
         out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(input_prompt)
         # out_text = tokenizer.decode(output[0], skip_special_tokens=True)
