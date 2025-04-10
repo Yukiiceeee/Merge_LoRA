@@ -1,6 +1,6 @@
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=1
 
 python ../src/train_adapter.py \
     --use_deepspeed false \
@@ -13,15 +13,15 @@ python ../src/train_adapter.py \
     --lora_r 8 \
     --lora_alpha 16 \
     --lora_dropout 0.05 \
-    --per_device_train_batch_size 8 \
+    --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 4 \
-    --model_max_length 512 \
+    --gradient_accumulation_steps 8 \
+    --model_max_length 1024 \
     --save_strategy "steps" \
     --save_steps 100 \
     --learning_rate 2e-4 \
     --num_train_epochs 6 \
-    --warmup_steps 40 \ 
+    --warmup_steps 40 \
     --logging_steps 1 \
     --do_train True \
     --weight_decay 0.01 \

@@ -9,6 +9,12 @@ PROMPT_DICT = {
         "Write a response that appropriately completes the request.\n\n"
         "### Instruction:\n{instruction}\n\n### Response:"
     ),
+    "prompt_mc": (
+        "The following are multiple choice questions (with answers) about medicine. "
+        "For each question, select ONLY the letter (A, B, C, D, E, F, or G) corresponding to the correct answer."
+        "Do not include any explanations, just provide the letter."
+        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Answer:"
+    ),
 }
 
 SELECT_PROMPT_START = (

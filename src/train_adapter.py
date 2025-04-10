@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ModelArguments:
-    model_name_or_path: Optional[str] = field(default="/path/to/your/base/model")
+    model_name_or_path: Optional[str] = field(default="/d2/mxy/Models/Qwen2-7B")
     peft_type: Optional[str] = field(default="lora")
     lora_r: Optional[int] = field(default=8)
     lora_alpha: Optional[float] = field(default=16)
@@ -33,9 +33,9 @@ class ModelArguments:
 
 @dataclass
 class DataArguments:
-    domain: str = field(default=None, metadata={"help": "Domain name"})
-    task: str = field(default=None, metadata={"help": "Task name"})
-    train_data_path: str = field(default=None, metadata={"help": "Path to the training data"})
+    domain: str = field(default="med", metadata={"help": "Domain name"})
+    task: str = field(default="mc", metadata={"help": "Task name"})
+    train_data_path: str = field(default="/d2/mxy/TASA/data/data_adapters/med/mc/train.json", metadata={"help": "Path to the training data"})
     eval_data_path: Optional[str] = field(default=None, metadata={"help": "Path to the evaluation data"})
 
 
@@ -166,6 +166,18 @@ def preprocess(
     labels = copy.deepcopy(input_ids)
     for label, source_len in zip(labels, sources_tokenized["input_ids_lens"]):
         label[:source_len] = IGNORE_INDEX
+    
+    # 添加日志验证
+    for i in range(min(3, len(sources))):  # 只检查前几个样本
+        source_text = tokenizer.decode(sources_tokenized["input_ids"][i])
+        full_text = tokenizer.decode(input_ids[i])
+        label_text = tokenizer.decode([id for id, lab in zip(input_ids[i], labels[i]) if lab != IGNORE_INDEX])
+        
+        logger.info(f"Sample {i}:")
+        logger.info(f"Source length: {sources_tokenized['input_ids_lens'][i]}")
+        logger.info(f"Source text: {source_text}")
+        logger.info(f"Label text: {label_text}")
+    
     return dict(input_ids=input_ids, labels=labels)
 
 
