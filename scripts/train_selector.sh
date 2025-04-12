@@ -1,12 +1,12 @@
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1
-export CUDA_VISIBLE_DEVICES=4
+export CUDA_VISIBLE_DEVICES=1
 
 python ../src/train_selector.py \
     --use_deepspeed false \
     --model_name_or_path /d2/mxy/Models/Meta-Llama-3-8B \
-    --train_data_path /d2/mxy/TASA/config/data_config_exp_6.json \
-    --output_dir ../selector/selector_test \
+    --train_data_path /d2/mxy/TASA/config/data_config_exp_12.json \
+    --output_dir ../selector/selector_exp12_llama3-8B \
     --peft_type lora \
     --n_clusters 500 \
     --encoder embedding \

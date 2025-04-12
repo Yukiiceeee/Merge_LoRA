@@ -44,21 +44,34 @@ class TrainingArguments(transformers.TrainingArguments):
     cache_dir: Optional[str] = field(default="./cache")
     optim: str = field(default="adamw_torch")
     model_max_length: int = field(
-        default=2048,
+        default=1024,
         metadata={"help": "Maximum sequence length. Sequences will be right padded (and possibly truncated)."},
     )
     use_deepspeed: bool = field(default=False)
 
+    evaluation_strategy: str = field(default="steps")  # 按步数进行评估
+    eval_steps: int = field(default=100)  # 每100步评估一次
+    evaluation_strategy: str = field(default="steps")  # 按步数进行评估
+    eval_steps: int = field(default=100)  # 每100步评估一次
+    save_strategy: str = field(default="steps")  # 按步数保存
+    save_steps: int = field(default=100)  # 每100步保存一次
+    save_total_limit: int = field(default=3)  # 最多保存3个checkpoint
+    load_best_model_at_end: bool = field(default=True)  # 训练结束后加载最佳模型
+    metric_for_best_model: str = field(default="eval_loss")  # 用验证集loss选择最佳模型
+    greater_is_better: bool = field(default=False)  # loss越小越好
+
 
 def get_target(model_type, named_modules) -> List[str]:
     target_modules = LORA_TARGET_MAP.get(model_type, [])
-    if not target_modules:
-        cls = torch.nn.Linear
-        lora_module_names = {name.split('.')[-1] for name, module in named_modules if isinstance(module, cls)}
-        if "lm_head" in lora_module_names:
-            lora_module_names.remove("lm_head")
-        return list(lora_module_names)
-    return target_modules
+    if "qwen" in model_type.lower():
+        return ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    # if not target_modules:
+    #     cls = torch.nn.Linear
+    #     lora_module_names = {name.split('.')[-1] for name, module in named_modules if isinstance(module, cls)}
+    #     if "lm_head" in lora_module_names:
+    #         lora_module_names.remove("lm_head")
+    #     return list(lora_module_names)
+    # return target_modules
 
 
 def load_model_and_tokenizer(model_args: ModelArguments, training_args: TrainingArguments) -> tuple:
@@ -129,7 +142,6 @@ def load_model_and_tokenizer(model_args: ModelArguments, training_args: Training
     
     return model, tokenizer
 
-
 def _tokenize_fn(strings: Sequence[str], tokenizer: transformers.PreTrainedTokenizer) -> Dict:
     """Tokenize a list of strings."""
     tokenized_list = [
@@ -153,7 +165,6 @@ def _tokenize_fn(strings: Sequence[str], tokenizer: transformers.PreTrainedToken
         labels_lens=labels_lens,
     )
 
-
 def preprocess(
     sources: Sequence[str],
     targets: Sequence[str],
@@ -162,21 +173,22 @@ def preprocess(
     """Preprocess the data by tokenizing."""
     examples = [s + t for s, t in zip(sources, targets)]
     examples_tokenized, sources_tokenized = [_tokenize_fn(strings, tokenizer) for strings in (examples, sources)]
+    
     input_ids = examples_tokenized["input_ids"]
     labels = copy.deepcopy(input_ids)
+
     for label, source_len in zip(labels, sources_tokenized["input_ids_lens"]):
-        label[:source_len] = IGNORE_INDEX
+        label[:source_len-1] = IGNORE_INDEX
     
-    # 添加日志验证
-    for i in range(min(3, len(sources))):  # 只检查前几个样本
-        source_text = tokenizer.decode(sources_tokenized["input_ids"][i])
-        full_text = tokenizer.decode(input_ids[i])
-        label_text = tokenizer.decode([id for id, lab in zip(input_ids[i], labels[i]) if lab != IGNORE_INDEX])
+    # 日志验证
+    # for i in range(len(sources)):
+    #     source_text = tokenizer.decode(input_ids[i])
+    #     valid_label_ids = [token_id for token_id in labels[i] if token_id != IGNORE_INDEX]
+    #     label_text = tokenizer.decode(valid_label_ids)
         
-        logger.info(f"Sample {i}:")
-        logger.info(f"Source length: {sources_tokenized['input_ids_lens'][i]}")
-        logger.info(f"Source text: {source_text}")
-        logger.info(f"Label text: {label_text}")
+    #     logger.info(f"Sample {i}:")
+    #     logger.info(f"Source text: {source_text}")
+    #     logger.info(f"Label text: {label_text}")
     
     return dict(input_ids=input_ids, labels=labels)
 
@@ -196,7 +208,7 @@ class TaskDataset(Dataset):
         
         logger.warning(f"Loaded {len(list_data_dict)} examples")
         
-        prompt_input, prompt_no_input = PROMPT_DICT["prompt_input"], PROMPT_DICT["prompt_no_input"]
+        prompt_input, prompt_no_input = PROMPT_DICT["prompt_mc_input"], PROMPT_DICT["prompt_mc_no_input"]
         
         sources = [
             prompt_input.format_map(example) if example.get("input", "") != "" 
@@ -273,7 +285,6 @@ def train():
         output_dir = os.path.join(training_args.output_dir, data_args.domain, data_args.task)
         training_args.output_dir = output_dir
     
-    # Create output directory if it doesn't exist
     if not os.path.exists(training_args.output_dir):
         os.makedirs(training_args.output_dir, exist_ok=True)
     

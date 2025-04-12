@@ -25,8 +25,8 @@ def run(
     domain: str = "med",
     task: str = "mc"
 ):
-
-    prompt_input, prompt_no_input = PROMPT_DICT["prompt_input"], PROMPT_DICT["prompt_no_input"]
+    prompt_input, prompt_no_input = PROMPT_DICT["prompt_mc_input"], PROMPT_DICT["prompt_mc_no_input"]
+    # prompt_input, prompt_no_input = PROMPT_DICT["prompt_input"], PROMPT_DICT["prompt_no_input"]
 
     model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto', torch_dtype='auto', trust_remote_code=True)
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=False)
@@ -55,11 +55,15 @@ def run(
         input_prompt = prompt_input.format_map(example) if example.get("input", "") != "" else prompt_no_input.format_map(example)
         inputs = tokenizer(input_prompt, return_tensors="pt")
         inputs = {k: v.to("cuda") for k, v in inputs.items()}
-        output = model.generate(**inputs, max_new_tokens=256)
-        out_text = tokenizer.decode(output[0], skip_special_tokens=True).removeprefix(input_prompt)
+        output = model.generate(
+            **inputs, 
+            max_new_tokens=256,
+            )
+        full_text = tokenizer.decode(output[0], skip_special_tokens=True)
+        out_text = full_text.removeprefix(input_prompt)
         # out_text = tokenizer.decode(output[0], skip_special_tokens=True)
         example["pred"] = out_text
-        print(out_text)
+
     path = adapter_model_id + "/pred.json"
     if not os.path.exists(path):
         os.mknod(path)
@@ -78,10 +82,10 @@ def run(
                         if content == i["pred"]:
                             acc += 1
                     else:
-                        if i["pred"] == i["output"] or i["perd"].startswith(i["output"]) or i["output"].startswith(i["pred"]):
+                        if i["pred"] == i["output"] or i["pred"].startswith(i["output"]) or i["output"].startswith(i["pred"]):
                             acc += 1
                 else:
-                    if i["pred"] == i["output"] or i["pred"].startswith(i["output"]) or i["output"].startswith(i["pred"]):
+                    if i["pred"] == i["output"] or i["pred"].startswith(i["output"]) or i["output"].startswith(i["pred"]) or i["output"] in i["pred"]:
                             acc += 1
             acc_path = adapter_model_id + "/acc.json"
             if not os.path.exists(acc_path):

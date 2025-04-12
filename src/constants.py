@@ -2,18 +2,20 @@ PROMPT_DICT = {
     "prompt_input": (
         "Below is an instruction that describes a task, paired with an input that provides further context. "
         "Write a response that appropriately completes the request.\n\n"
-        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:"
+        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n"
     ),
     "prompt_no_input": (
         "Below is an instruction that describes a task. "
         "Write a response that appropriately completes the request.\n\n"
-        "### Instruction:\n{instruction}\n\n### Response:"
+        "### Instruction:\n{instruction}\n\n### Response:\n"
     ),
-    "prompt_mc": (
-        "The following are multiple choice questions (with answers) about medicine. "
-        "For each question, select ONLY the letter (A, B, C, D, E, F, or G) corresponding to the correct answer."
-        "Do not include any explanations, just provide the letter."
-        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Answer:"
+    "prompt_mc_input": (
+        "Below is a multiple choice question. Write a response that contains the letter of the correct answer followed by its complete content (e.g., 'B. Head is the right part')."
+        "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n"
+    ),
+    "prompt_mc_no_input": (
+        "Below is a multiple choice question. Write a response that contains the letter of the correct answer followed by its complete content (e.g., 'B. Head is the right part')."
+        "### Instruction:\n{instruction}\n\n### Response:\n"
     ),
 }
 
